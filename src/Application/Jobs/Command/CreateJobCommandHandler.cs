@@ -24,7 +24,7 @@ public class CreateJobCommandHandler : IRequestHandler<CreateJobCommand, Result<
             Title = request.Title,
             Description = request.Description,
             SelectedService = request.SelectedService,
-            Status = "submitted",
+            Status = "in_progress",
             CreatedAt = DateTime.UtcNow,
         };
 

@@ -27,16 +27,18 @@ public class IdentityService : IIdentityService
     public async Task<string?> GetUserNameAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId);
-
         return user?.UserName;
     }
 
-    public async Task<(Result Result, User? CreatedUser)> CreateUserAsync(string userName, string email, string password, string role = Roles.Customer)
+    public async Task<(Result Result, User? CreatedUser)> CreateUserAsync(string userName, string email, string password, string role = Roles.Customer, string? phone = null, string? address = null, string? postalCode = null)
     {
         var applicationUser = new ApplicationUser
         {
             UserName = userName,
-            Email = email
+            Email = email,
+            PhoneNumber = phone,
+            Address = address ?? string.Empty,
+            PostalCode = postalCode ?? string.Empty
         };
 
         var result = await _userManager.CreateAsync(applicationUser, password);
@@ -44,7 +46,6 @@ public class IdentityService : IIdentityService
         if (!result.Succeeded)
             return (result.ToApplicationResult(), null);
 
-        // Assign role after creation
         if (Roles.All.Contains(role))
             await _userManager.AddToRoleAsync(applicationUser, role);
 
@@ -55,21 +56,15 @@ public class IdentityService : IIdentityService
     public async Task<bool> IsInRoleAsync(string userId, string role)
     {
         var user = await _userManager.FindByIdAsync(userId);
-
         return user != null && await _userManager.IsInRoleAsync(user, role);
     }
 
     public async Task<bool> AuthorizeAsync(string userId, string policyName)
     {
         var user = await _userManager.FindByIdAsync(userId);
-
-        if (user == null)
-        {
-            return false;
-        }
+        if (user == null) return false;
 
         var principal = await _userClaimsPrincipalFactory.CreateAsync(user);
-
         var result = await _authorizationService.AuthorizeAsync(principal, policyName);
 
         return result.Succeeded;
@@ -78,16 +73,22 @@ public class IdentityService : IIdentityService
     public async Task<Result> DeleteUserAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId);
-
         return user != null ? await DeleteUserAsync(user) : Result.Success();
     }
+
+    public async Task<Result> DeleteUserAsync(ApplicationUser user)
+    {
+        var result = await _userManager.DeleteAsync(user);
+        return result.ToApplicationResult();
+    }
+
     public async Task<Result> UpdateUserAsync(User user)
     {
         var appUser = await _userManager.FindByIdAsync(user.Id);
         if (appUser == null) return Result.Failure("User not found");
 
         appUser.UserName = user.UserName;
-        appUser.Phone = user.Phone;
+        appUser.PhoneNumber = user.Phone;
         appUser.Address = user.Address;
         appUser.PostalCode = user.PostalCode;
         appUser.UpdatedAt = DateTime.UtcNow;
@@ -96,56 +97,12 @@ public class IdentityService : IIdentityService
         return result.ToApplicationResult();
     }
 
-    public async Task<Result> DeleteUserAsync(ApplicationUser user)
-    {
-        var result = await _userManager.DeleteAsync(user);
-
-        return result.ToApplicationResult();
-    }
     public async Task<User?> FindByUserNameOrEmailAsync(string identifier)
     {
-        var applicationUser = await _userManager.Users
+        var appUser = await _userManager.Users
             .FirstOrDefaultAsync(u => u.UserName == identifier || u.Email == identifier);
 
-        return applicationUser == null ? null : ToDomainUser(applicationUser);
-    }
-
-    public async Task<bool> ValidateUserCredentialsAsync(string identifier, string password)
-    {
-        var applicationUser = await _userManager.Users
-                    .FirstOrDefaultAsync(u => u.UserName == identifier || u.Email == identifier);
-
-        if (applicationUser == null)
-            return false;
-
-        return await _userManager.CheckPasswordAsync(applicationUser, password);
-    }
-
-    // src/Infrastructure/Identity/IdentityService.cs
-    public User ToDomainUser(ApplicationUser applicationUser)
-    {
-        return new User
-        {
-            Id = applicationUser.Id,
-            UserName = applicationUser.UserName ?? "",
-            Email = applicationUser.Email ?? "",
-            Phone = applicationUser.Phone ?? "",
-            Address = applicationUser.Address ?? "",
-            PostalCode = applicationUser.PostalCode ?? ""
-        };
-    }
-
-    public ApplicationUser ToApplicationUser(User domainUser)
-    {
-        return new ApplicationUser
-        {
-            Id = domainUser.Id,
-            UserName = domainUser.UserName,
-            Email = domainUser.Email,
-            Phone = domainUser.Phone,
-            Address = domainUser.Address,
-            PostalCode = domainUser.PostalCode
-        };
+        return appUser == null ? null : ToDomainUser(appUser);
     }
 
     public async Task<User> FindByIdAsync(string userId)
@@ -154,4 +111,35 @@ public class IdentityService : IIdentityService
         return appUser == null ? throw new Exception("User not found") : ToDomainUser(appUser);
     }
 
+    public async Task<bool> ValidateUserCredentialsAsync(string identifier, string password)
+    {
+        var appUser = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == identifier || u.Email == identifier);
+        return appUser != null && await _userManager.CheckPasswordAsync(appUser, password);
+    }
+
+    public User ToDomainUser(ApplicationUser appUser) => new()
+    {
+        Id = appUser.Id,
+        UserName = appUser.UserName ?? string.Empty,
+        Name = appUser.Name ?? string.Empty,
+        Email = appUser.Email ?? string.Empty,
+        Phone = appUser.PhoneNumber ?? string.Empty,
+        Address = appUser.Address ?? string.Empty,
+        PostalCode = appUser.PostalCode ?? string.Empty,
+        CreatedAt = appUser.CreatedAt,
+        UpdatedAt = appUser.UpdatedAt
+    };
+
+    public ApplicationUser ToApplicationUser(User user) => new()
+    {
+        Id = user.Id,
+        UserName = user.UserName,
+        Name = user.Name,
+        Email = user.Email,
+        PhoneNumber = user.Phone,
+        Address = user.Address,
+        PostalCode = user.PostalCode,
+        CreatedAt = user.CreatedAt,
+        UpdatedAt = user.UpdatedAt
+    };
 }

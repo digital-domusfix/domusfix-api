@@ -3,6 +3,7 @@ using System;
 using DomusFix.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DomusFix.Api.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250419134912_AddContactAndExtendedUserFields")]
+    partial class AddContactAndExtendedUserFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,9 +31,6 @@ namespace DomusFix.Api.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Address")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ApplicationUserId")
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
@@ -52,8 +52,6 @@ namespace DomusFix.Api.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Contacts");
                 });
@@ -179,9 +177,6 @@ namespace DomusFix.Api.Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -208,6 +203,10 @@ namespace DomusFix.Api.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
@@ -377,13 +376,6 @@ namespace DomusFix.Api.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("DomusFix.Api.Domain.Entities.Contact", b =>
-                {
-                    b.HasOne("DomusFix.Api.Infrastructure.Identity.ApplicationUser", null)
-                        .WithMany("Contacts")
-                        .HasForeignKey("ApplicationUserId");
-                });
-
             modelBuilder.Entity("DomusFix.Api.Domain.Entities.Jobs.Job", b =>
                 {
                     b.HasOne("DomusFix.Api.Domain.Entities.Jobs.Quote", "AcceptedQuote")
@@ -493,11 +485,6 @@ namespace DomusFix.Api.Infrastructure.Data.Migrations
             modelBuilder.Entity("DomusFix.Api.Domain.Entities.Jobs.Job", b =>
                 {
                     b.Navigation("Quotes");
-                });
-
-            modelBuilder.Entity("DomusFix.Api.Infrastructure.Identity.ApplicationUser", b =>
-                {
-                    b.Navigation("Contacts");
                 });
 #pragma warning restore 612, 618
         }

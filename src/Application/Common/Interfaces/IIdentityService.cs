@@ -12,7 +12,7 @@ public interface IIdentityService
 
     Task<bool> AuthorizeAsync(string userId, string policyName);
 
-    Task<(Result Result, User? CreatedUser)> CreateUserAsync(string userName, string email, string password, string role = Roles.Customer);
+    Task<(Result Result, User? CreatedUser)> CreateUserAsync(string userName, string email, string password, string role = Roles.Customer, string? phone = null, string? address = null, string? postalCode = null);
 
     Task<bool> ValidateUserCredentialsAsync(string identifier, string password);
 

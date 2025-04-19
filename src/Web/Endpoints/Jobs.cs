@@ -17,7 +17,7 @@ public class Jobs : EndpointGroupBase
             return Results.Ok(new
             {
                 jobId = result.Value,
-                status = "submitted"
+                status = "in_progress"
             });
         })
         .AllowAnonymous();
@@ -39,7 +39,7 @@ public class Jobs : EndpointGroupBase
         return TypedResults.Ok(new
         {
             jobId = result.Value,
-            status = "submitted"
+            status = "in_progress"
         });
     }
     public async Task<IResult> GetJobById(string id, ISender sender)

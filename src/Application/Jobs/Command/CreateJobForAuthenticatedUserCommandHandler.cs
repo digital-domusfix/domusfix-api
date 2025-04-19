@@ -2,6 +2,7 @@
 using DomusFix.Api.Application.Common.Models;
 using DomusFix.Api.Domain.Entities;
 using DomusFix.Api.Domain.Entities.Jobs;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace DomusFix.Api.Application.Jobs.Command;
 
@@ -20,6 +21,8 @@ public class CreateJobForAuthenticatedUserCommandHandler : IRequestHandler<Creat
     {
         if (_user.Id == null)
             return Result.Failure<string>("Authentication required.");
+
+        var utcDate = DateTime.SpecifyKind(request.PreferredDate, DateTimeKind.Utc);
 
         // 👤 Create contact for this job
         var contact = new Contact
@@ -42,8 +45,8 @@ public class CreateJobForAuthenticatedUserCommandHandler : IRequestHandler<Creat
             Title = request.Title,
             SelectedService = request.SelectedService,
             Description = request.Description,
-            PreferredDate = request.PreferredDate,
-            Status = "submitted",
+            PreferredDate = utcDate,
+            Status = "in_progress",
             CreatedAt = DateTime.UtcNow,
             ContactId = contact.Id
         };

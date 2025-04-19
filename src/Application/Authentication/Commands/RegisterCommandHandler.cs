@@ -17,12 +17,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result>
     public async Task<Result> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var (result, user) = await _identityService.CreateUserAsync(
-            request.Name, request.Email, request.Password, request.Role);
+            request.Name, request.Email, request.Password, request.Role,
+            request.Phone, request.Address, request.PostalCode);
 
         if (!result.IsSuccess || user == null)
             return Result.Failure(result.Errors);
 
-        // 🧾 Create contact entry linked to this user
         var contact = new Contact
         {
             Name = request.Name,
@@ -39,4 +39,3 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result>
         return Result.Success();
     }
 }
-
